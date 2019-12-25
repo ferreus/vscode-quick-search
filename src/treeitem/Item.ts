@@ -5,9 +5,11 @@ import * as vscode from 'vscode';
 export class Item extends vscode.TreeItem {
 	readonly labelLength: number = <number>vscode.workspace.getConfiguration().get('quickSearcher.searchItem.labelLength');
 	private lines: Item[] = [];
-	constructor(public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState, public readonly resourceUri: vscode.Uri, public readonly tooltip: string, public readonly searchWord: string) {
+	constructor(public readonly label: string|undefined, public readonly collapsibleState: vscode.TreeItemCollapsibleState, public readonly resourceUri: vscode.Uri, public readonly tooltip: string, public readonly searchWord: string) {
 		super(resourceUri, collapsibleState);
+		this.description = true;
 	}
+
 	pushLine(lineColumn: string, searchedLine: string): void {
 		const brief = searchedLine.length > this.labelLength ? searchedLine.substr(0, this.labelLength) + '...' : searchedLine;
 		const tooltip = `${lineColumn}: ${brief}`;
@@ -35,7 +37,7 @@ export class Item extends vscode.TreeItem {
 	}
 	;
 	get range(): vscode.Range | undefined {
-		if (this.collapsibleState != vscode.TreeItemCollapsibleState.None) {
+		if (this.collapsibleState != vscode.TreeItemCollapsibleState.None || !this.label) {
 			return undefined;
 		}
 		else {

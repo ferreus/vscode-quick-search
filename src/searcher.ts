@@ -71,7 +71,7 @@ export class Searcher {
             const resourceUri = vscode.Uri.file(`${this.workspaceRoot}/${filePath}`);
             let item = <Item>acc[resourceUri.fsPath];
             if (!item) {
-                item = acc[resourceUri.fsPath] = new Item(filePath, this.fileCollapsibleState, resourceUri, resourceUri.fsPath, input.word);
+                item = acc[resourceUri.fsPath] = new Item(undefined, this.fileCollapsibleState, resourceUri, resourceUri.fsPath, input.word);
             }
             item.pushLine(lineColumn, searchedLine);
             return acc;
