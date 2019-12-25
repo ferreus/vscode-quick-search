@@ -127,6 +127,19 @@
                         "type": "boolean",
                         "default": true,
                         "description": "set to expand searched items"
+                    },
+                    "quickSearcher.ignorePatterns" : {
+                        "type" : "array",
+                        "items": {
+                            "type" : "string",
+                            "title": "Patterns to Ignore",
+                            "examples": [
+                                "*.orig",
+                                "*.ninja"
+                            ]
+                        },
+                        "default": [],
+                        "description": "Ignore patterns"
                     }
                 }
             }

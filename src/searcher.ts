@@ -36,13 +36,21 @@ export class Searcher {
 		? vscode.TreeItemCollapsibleState.Expanded
 		: vscode.TreeItemCollapsibleState.Collapsed;
 
+
+    static readonly ignorePatterns : string[]  = vscode.workspace.getConfiguration().get("quickSearcher.ignorePatterns") || [];
+
 	private static _fileRegex(): RegExp {
 		return new RegExp("(.*):(\\d+:\\d+):(.*)", "g");
 	}
 
     private static _search(input: Input): Promise<string> {
         const command = 'ag';
-        const args = ["-o", "--nogroup", "--column", input.word];
+        const args = ["-o", "--nogroup", "--column"];
+        this.ignorePatterns.forEach((pattern) => {
+            args.push("--ignore");
+            args.push(pattern);
+        });
+        args.push(input.word);
         if (input.folder !== '') {
             args.push(input.folder);
         }
