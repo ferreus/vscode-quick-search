@@ -58,6 +58,8 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 			searchItem.id = searchRequest.id;
 			this.items.push(searchItem);
 		}
+		searchItem.clear();
+		this.rootMap = {};
 		searchItem.label = searchRequest.searchWord;
 
 		Searcher.search2(searchRequest, (id, match) => {
@@ -68,8 +70,8 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 					searchItem.add(item);
 				}
 			}
-			item.pushLine(match.lineColumn,match.searchedLine);
-			this._onDidChangeTreeData.fire(searchItem);
+			item.pushLine(match.lineColumn,match.searchedLine,searchRequest.searchWord);
+			this._onDidChangeTreeData.fire();
 		});
 		this._onDidChangeTreeData.fire();
 	}
@@ -80,7 +82,7 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 			vscode.window.showErrorMessage('Workspace Necessary for Search');
 			return [];
 		}
-
+		console.log('Fetching children!!!');
 		if (item) {
 			return item.getChildren();
 		} else {

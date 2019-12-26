@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 export class Item extends vscode.TreeItem {
 	readonly labelLength: number = <number>vscode.workspace.getConfiguration().get('quickSearcher.searchItem.labelLength');
 	private children: Item[] = [];
+	private range_ : vscode.Range | undefined;
 	constructor(private readonly ctxValue: string, public label: string|undefined, public readonly collapsibleState: vscode.TreeItemCollapsibleState, public readonly resourceUri: vscode.Uri, public readonly tooltip: string, public readonly searchWord: string) {
 		super(resourceUri, collapsibleState);
 		this.description = label === undefined;
@@ -15,10 +16,18 @@ export class Item extends vscode.TreeItem {
 		this.children.push(...items);
 	}
 
-	pushLine(lineColumn: string, searchedLine: string): void {
-		const brief = searchedLine.length > this.labelLength ? searchedLine.substr(0, this.labelLength) + '...' : searchedLine;
-		const tooltip = `${lineColumn}: ${brief}`;
-		this.children.push(new Item("line", tooltip, vscode.TreeItemCollapsibleState.None, this.resourceUri, searchedLine, this.searchWord));
+	clear() {
+		this.children = [];
+	}
+
+	pushLine(lineColumn: string, matchedLine: string, searchedLine: string): void {
+		const brief = matchedLine.length > this.labelLength ? matchedLine.substr(0, this.labelLength) + '...' : matchedLine;
+		const tooltip = `${lineColumn}: ${searchedLine}`;
+		var item = new Item("line", brief, vscode.TreeItemCollapsibleState.None, this.resourceUri, tooltip, searchedLine);
+		this.children.push(item);
+		const [startLine, startChar] = tooltip.split(':').slice(0, 2).map((i) => Number(i) - 1);
+		const endChar = startChar + searchedLine.length;
+		item.range = new vscode.Range(startLine, startChar, startLine, +endChar); 
 	}
 	add(item: Item) {
 		this.children.push(item);
@@ -51,9 +60,10 @@ export class Item extends vscode.TreeItem {
 		}
 		else {
 			// decrement since both line and char start by 0
-			const [startLine, startChar] = this.label.split(':').slice(0, 2).map((i) => Number(i) - 1);
-			const endChar = startChar + this.searchWord.length;
-			return new vscode.Range(startLine, startChar, startLine, +endChar);
+			return this.range_;
 		}
+	}
+	set range(value: vscode.Range | undefined) {
+		this.range_ = value;
 	}
 }

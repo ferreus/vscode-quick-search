@@ -37,7 +37,7 @@ export class Searcher {
         }
         this.cancel();
         const command = 'ag';
-        const args = ["-o", "--nogroup", "--column"];
+        const args = ["--nogroup", "--column"];
         this.ignorePatterns.forEach((pattern) => {
             args.push("--ignore");
             args.push(pattern);
@@ -58,8 +58,7 @@ export class Searcher {
             const matched: string[] = this._fileRegex().exec(line) || [];
             let [filePath, lineColumn, searchedLine = ''] = matched.slice(1);
             const resourceUri = vscode.Uri.file(`${this.workspaceRoot}/${filePath}`);
-            let item = new SearchResult(filePath, lineColumn, searchedLine, resourceUri);
-            console.log(filePath,lineColumn,searchedLine);
+            let item = new SearchResult(filePath, lineColumn, searchedLine.trim(), resourceUri);
             cb(searchRequest.id, item);
         });
         this._agProcess.on("exit", (code: number, signal: string) => {
@@ -129,7 +128,7 @@ export class Searcher {
             if (!item) {
                 item = acc[resourceUri.fsPath] = new Item("file", undefined, this.fileCollapsibleState, resourceUri, resourceUri.fsPath, input.word);
             }
-            item.pushLine(lineColumn, searchedLine);
+            item.pushLine(lineColumn, searchedLine, searchedLine);
             return acc;
         }, {});
         return Object.keys(items).map((k) => items[k]);
