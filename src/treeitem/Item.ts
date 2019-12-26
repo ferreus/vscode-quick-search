@@ -4,24 +4,27 @@ import * as vscode from 'vscode';
 
 export class Item extends vscode.TreeItem {
 	readonly labelLength: number = <number>vscode.workspace.getConfiguration().get('quickSearcher.searchItem.labelLength');
-	private lines: Item[] = [];
+	private children: Item[] = [];
 	constructor(private readonly ctxValue: string, public label: string|undefined, public readonly collapsibleState: vscode.TreeItemCollapsibleState, public readonly resourceUri: vscode.Uri, public readonly tooltip: string, public readonly searchWord: string) {
 		super(resourceUri, collapsibleState);
 		this.description = label === undefined;
 	}
 
 	addAll(items: Item[]) {
-		this.lines = [];
-		this.lines.push(...items);
+		this.children = [];
+		this.children.push(...items);
 	}
 
 	pushLine(lineColumn: string, searchedLine: string): void {
 		const brief = searchedLine.length > this.labelLength ? searchedLine.substr(0, this.labelLength) + '...' : searchedLine;
 		const tooltip = `${lineColumn}: ${brief}`;
-		this.lines.push(new Item("line", tooltip, vscode.TreeItemCollapsibleState.None, this.resourceUri, searchedLine, this.searchWord));
+		this.children.push(new Item("line", tooltip, vscode.TreeItemCollapsibleState.None, this.resourceUri, searchedLine, this.searchWord));
 	}
-	getLines(): Item[] {
-		return this.lines;
+	add(item: Item) {
+		this.children.push(item);
+	}
+	getChildren(): Item[] {
+		return this.children;
 	}
 	get iconPath(): {
 		light: string | vscode.Uri;

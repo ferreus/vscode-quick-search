@@ -9,9 +9,10 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 	readonly onDidChangeTreeData: vscode.Event<Item | undefined> = this._onDidChangeTreeData.event;
 
 	private _input: Input;
-	private items : Item[] = [];
+	private items: Item[] = [];
+	private rootMap: { [id: string]: Item } = {};
 
-    readonly workspaceRoot: string = vscode.workspace.rootPath || '';
+	readonly workspaceRoot: string = vscode.workspace.rootPath || '';
 
 	constructor() {
 		this._input = new Input();
@@ -24,6 +25,7 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 		vscode.commands.registerCommand('quickSearcher.clear', () => {
 			this._input.clear();
 			this.items = [];
+			this.rootMap = {};
 			this._onDidChangeTreeData.fire();
 		});
 		vscode.commands.registerCommand('quickSearcher.cancelSearch', () => Searcher.cancel());
@@ -48,18 +50,27 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 		return this._getChildren(item);
 	}
 
-	private async _onSearchRequest(searchRequest:SearchRequest) {
-		Searcher.cancel();
-		var searchResults = await Searcher.search(this._input);
+	private async _onSearchRequest(searchRequest: SearchRequest) {
 		var searchItem = this.items.find(x => x.id === searchRequest.id);
 		if (!searchItem) {
 			var resourceUri = vscode.Uri.parse(`silversearch://${searchRequest.searchWord}`);
-			searchItem = new Item("search", this._input.word, vscode.TreeItemCollapsibleState.Expanded,resourceUri,this._input.word,this._input.word);
+			searchItem = new Item("search", searchRequest.searchWord ,vscode.TreeItemCollapsibleState.Expanded,resourceUri,searchRequest.searchWord,searchRequest.searchWord);
 			searchItem.id = searchRequest.id;
 			this.items.push(searchItem);
 		}
-		searchItem.label = this._input.word;
-		searchItem.addAll(searchResults);
+		searchItem.label = searchRequest.searchWord;
+
+		Searcher.search2(searchRequest, (id, match) => {
+			let item = <Item>this.rootMap[match.uri.fsPath];
+			if (!item) {
+				item = this.rootMap[match.uri.fsPath] = new Item("file", undefined, Searcher.fileCollapsibleState, match.uri, match.uri.fsPath, match.searchedLine);
+				if (searchItem) {
+					searchItem.add(item);
+				}
+			}
+			item.pushLine(match.lineColumn,match.searchedLine);
+			this._onDidChangeTreeData.fire(searchItem);
+		});
 		this._onDidChangeTreeData.fire();
 	}
 
@@ -71,33 +82,17 @@ export class QuickSearcherProvider implements vscode.TreeDataProvider<Item> {
 		}
 
 		if (item) {
-			return item.getLines();
-		}  else {
+			return item.getChildren();
+		} else {
 			return this.items;
 		}
-		/*else if (this._input.word == '') {
-			// refresh
-			return this.items;
-		} else {
-			var searchResults = await Searcher.search(this._input);
-			
-			var searchItem = this.items.find(x => x.label === this._input.word);
-			if (!searchItem) {
-				var resourceUri = vscode.Uri.parse(`silversearch://${this._input.word}`);
-				vscode.window.showInformationMessage('Hello World!, a:'+resourceUri.authority+",p:"+resourceUri.path);
-				searchItem = new Item("search", this._input.word, vscode.TreeItemCollapsibleState.Expanded,resourceUri,this._input.word,this._input.word);
-				this.items.push(searchItem);
-			}
-			searchItem.addAll(searchResults);
-			return this.items;
-		}*/
 	}
 
 	clearSearchResult(item: Item) {
 		let qs = vscode.window.createOutputChannel("quickSearcher");
 		qs.appendLine('clear search result:');
 		qs.appendLine(JSON.stringify(item));
-		this.items = this.items.filter(x =>x.label !== item.label);
+		this.items = this.items.filter(x => x.label !== item.label);
 		this._input.clear();
 		this._onDidChangeTreeData.fire();
 	}

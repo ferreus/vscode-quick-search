@@ -3,8 +3,11 @@
 import * as vscode from 'vscode';
 
 export class SearchRequest {
-	constructor(public id: string, public searchWord : string) {}
+	constructor(public id: string, public searchWord : string, public folder: string = '') {}
 }
+
+
+
 export class Input {
 	private qs =  vscode.window.createOutputChannel("quickSearcher");
 	private _searchCountInDelay: number = 0;
