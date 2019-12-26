@@ -49,6 +49,15 @@
                 }
             },
             {
+                "command": "quickSearcher.clearSearchResult",
+                "title": "Clear search result",
+                "category": "QuickSearch",
+                "icon": {
+                    "light": "resources/light/clear.svg",
+                    "dark": "resources/dark/clear.svg"
+                }
+            },
+            {
                 "command": "quickSearcher.searchInFolder",
                 "title": "Search Word in Selected Folder(NO hotkey available)",
                 "category": "QuickSearch"
@@ -83,6 +92,13 @@
                 {
                     "command": "quickSearcher.clear",
                     "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "quickSearcher.clearSearchResult",
+                    "when": "viewItem == search",
+                    "group": "inline"
                 }
             ],
             "explorer/context": [
